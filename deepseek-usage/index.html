@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https:; manifest-src 'self'; base-uri 'none'; object-src 'none'">
+  <title>DeepSeek 用量</title>
+
+  <meta name="theme-color" content="#f2f4f8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0e14" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="DS 用量">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="titles">
+      <h1>DeepSeek 用量</h1>
+      <p id="updated" class="muted small" aria-live="polite"></p>
+    </div>
+    <div class="actions">
+      <button id="btnRefresh" class="icon-btn" type="button" aria-label="刷新" title="刷新">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+      </button>
+      <button id="btnSettings" class="icon-btn" type="button" aria-label="设置" title="设置">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" role="alert" hidden></div>
+
+  <!-- 首次使用 -->
+  <section id="setup" class="card setup" hidden>
+    <h2>先连接你的账号</h2>
+    <p>到 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">DeepSeek 开放平台</a>
+      新建一个<strong>只给本应用用的 API Key</strong>，填进来就能看余额和消耗趋势。Key 只存在这台设备上。</p>
+    <button id="btnSetup" class="btn primary" type="button">填写 API Key</button>
+  </section>
+
+  <!-- 有 Key 但还没有任何数据 -->
+  <section id="pending" class="card" hidden>
+    <p id="pendingText" class="muted"></p>
+  </section>
+
+  <!-- 看板 -->
+  <section id="dash" hidden>
+    <div id="seg" class="seg" role="group" aria-label="币种" hidden></div>
+
+    <div class="grid">
+      <article class="card hero">
+        <div class="row">
+          <span class="label">总余额</span>
+          <span id="badge" class="pill"></span>
+        </div>
+        <div id="vTotal" class="value big">—</div>
+      </article>
+
+      <article class="card">
+        <div class="label">充值余额</div>
+        <div id="vTopped" class="value">—</div>
+      </article>
+      <article class="card">
+        <div class="label">赠送余额</div>
+        <div id="vGranted" class="value">—</div>
+      </article>
+
+      <article class="card">
+        <div class="label">今日消耗（估）</div>
+        <div id="vToday" class="value">—</div>
+      </article>
+      <article class="card">
+        <div class="label">近 7 日（估）</div>
+        <div id="v7d" class="value">—</div>
+      </article>
+      <article class="card">
+        <div class="label">近 30 日（估）</div>
+        <div id="v30d" class="value">—</div>
+      </article>
+      <article class="card">
+        <div class="label">预计还能用</div>
+        <div id="vRunway" class="value">—</div>
+        <div id="subRunway" class="muted small"></div>
+      </article>
+
+      <article class="card wide">
+        <div class="label">每日消耗（近 14 天）</div>
+        <div id="chartBars" class="chart"></div>
+      </article>
+      <article class="card wide">
+        <div class="label">余额走势（近 30 天）</div>
+        <div id="chartLine" class="chart"></div>
+      </article>
+    </div>
+
+    <p class="foot muted small">
+      「消耗」＝本机相邻两次刷新之间总余额的减少量，记在刷新当天；刷新间隔内的充值会把它抵消一部分，赠送余额过期也会被算进去。
+      只有打开本应用时才会采样。按模型 / 按 token 的明细请看
+      <a href="https://platform.deepseek.com/usage" target="_blank" rel="noopener noreferrer">官方用量页</a>。
+      本应用为个人自用的非官方工具。
+    </p>
+  </section>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form id="dlgForm" autocomplete="off">
+    <h2 id="dlgTitle">设置</h2>
+
+    <label class="field">
+      <span>API Key</span>
+      <div class="inline">
+        <input id="inKey" type="password" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="sk-…">
+        <button id="btnShowKey" class="btn" type="button">显示</button>
+      </div>
+      <small class="muted">只保存在这台设备的浏览器存储里，仅发送给下面的接口地址。建议新建专用 Key，设备丢了就直接删掉它。</small>
+    </label>
+
+    <label class="field">
+      <span>接口地址（可选）</span>
+      <input id="inBase" type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://api.deepseek.com">
+      <small class="muted">留空即直连官方。仅当直连报跨域（CORS）错误时，才需要填自己部署的代理，见 README。</small>
+    </label>
+
+    <p id="dlgError" class="dlg-error" role="alert" hidden></p>
+
+    <div class="dlg-actions">
+      <button id="btnSave" class="btn primary" type="submit">保存并刷新</button>
+      <button id="btnCancel" class="btn" type="button">取消</button>
+    </div>
+
+    <hr>
+    <div class="dlg-actions danger-zone">
+      <button id="btnClearHist" class="btn" type="button">清空本机历史</button>
+      <button id="btnLogout" class="btn danger" type="button">清除 Key 与全部数据</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
